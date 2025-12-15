@@ -168,6 +168,13 @@ st.markdown("""
         border: 2px solid rgba(0,0,0,0.1);
     }
     
+    /* Color display fix */
+    .color-option {
+        display: flex;
+        align-items: center;
+        padding: 5px 0;
+    }
+    
     /* Footer */
     .footer {
         text-align: center;
@@ -309,9 +316,7 @@ st.markdown("<p class='subtitle'>Modeling and Simulation of Casino Games with Ho
 
 # Sidebar with improved design
 with st.sidebar:
-    st.markdown("<div style='text-align: center; margin-bottom: 2rem;'>", unsafe_allow_html=True)
     st.markdown("### 🎮 CONTROL PANEL")
-    st.markdown("</div>", unsafe_allow_html=True)
     
     # Game parameters in expandable sections
     with st.expander("⚙️ SIMULATION PARAMETERS", expanded=True):
@@ -343,24 +348,11 @@ with st.sidebar:
             help="Fair: Equal probabilities | Tweaked: House advantage | Compare: Side-by-side analysis"
         )
         
-        # Color selection with visual chips
+        # Color selection - FIXED: Display only color names
         colors = ["Red", "Green", "Blue", "Yellow", "White", "Black"]
-        color_display = []
-        for color in colors:
-            color_code = {
-                "Red": "#FF4B4B",
-                "Green": "#4CAF50",
-                "Blue": "#2196F3",
-                "Yellow": "#FFD700",
-                "White": "#FFFFFF",
-                "Black": "#000000"
-            }
-            color_display.append(f"<span class='color-chip' style='background-color:{color_code[color]};'></span>{color}")
-        
         player_color = st.selectbox(
             "Your Color:",
             colors,
-            format_func=lambda x: f"<span class='color-chip' style='background-color:{color_code[x]};'></span>{x}",
             help="Choose which color to bet on"
         )
     
@@ -467,31 +459,30 @@ if run_simulation:
                 st.markdown(f"<h3><span class='badge {badge_class}'>{gtype.upper()}</span></h3>", unsafe_allow_html=True)
                 
                 # Metrics in cards
-                with st.container():
-                    col_metric1, col_metric2 = st.columns(2)
-                    with col_metric1:
-                        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                        st.metric(
-                            "Final Balance", 
-                            f"₱{result['final_balance']:,.2f}",
-                            delta=f"₱{result['total_profit']:,.2f}" if result['total_profit'] >= 0 else f"₱{result['total_profit']:,.2f}",
-                            delta_color="normal"
-                        )
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        
-                        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                        st.metric("Win Rate", f"{result['win_rate']*100:.1f}%")
-                        st.markdown("</div>", unsafe_allow_html=True)
+                col_metric1, col_metric2 = st.columns(2)
+                with col_metric1:
+                    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+                    st.metric(
+                        "Final Balance", 
+                        f"₱{result['final_balance']:,.2f}",
+                        delta=f"₱{result['total_profit']:,.2f}" if result['total_profit'] >= 0 else f"₱{result['total_profit']:,.2f}",
+                        delta_color="normal"
+                    )
+                    st.markdown("</div>", unsafe_allow_html=True)
                     
-                    with col_metric2:
-                        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                        st.metric("Total Games", f"{result['total_games']:,}")
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        
-                        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
-                        ev_color = "🟢" if result['expected_value'] > 0 else "🔴"
-                        st.metric("Expected Value", f"₱{result['expected_value']:.2f}")
-                        st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+                    st.metric("Win Rate", f"{result['win_rate']*100:.1f}%")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                
+                with col_metric2:
+                    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+                    st.metric("Total Games", f"{result['total_games']:,}")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+                    ev_icon = "📈" if result['expected_value'] > 0 else "📉"
+                    st.metric("Expected Value", f"₱{result['expected_value']:.2f}")
+                    st.markdown("</div>", unsafe_allow_html=True)
                 
                 # Plot balance history
                 fig = go.Figure()
@@ -606,7 +597,6 @@ if run_simulation:
                 mime="text/csv",
                 help="Download complete simulation data for further analysis"
             )
-        st.markdown("</div>", unsafe_allow_html=True)
         
     else:
         # Single game type results
@@ -786,14 +776,6 @@ if run_simulation:
                         yaxis_title="Frequency"
                     )
                     
-                    # Highlight player's color
-                    if player_color in color_counts.index:
-                        fig.update_traces(
-                            marker_line_width=3,
-                            marker_line_color='black',
-                            selector=dict(name=player_color)
-                        )
-                    
                     st.plotly_chart(fig, use_container_width=True)
         
         with tab3:
@@ -861,9 +843,8 @@ if run_simulation:
                     st.markdown("<div class='info-card'>", unsafe_allow_html=True)
                     st.markdown("#### 🎰 Game Information")
                     st.markdown(f"*Payout Multiplier:* {result['payout_multiplier']}:1")
-                    st.markdown(f"*Player's Color:* <span class='color-chip' style='background-color:{color_palette[player_color]};'></span>{player_color}", unsafe_allow_html=True)
+                    st.markdown(f"*Player's Color:* {player_color}")
                     st.markdown(f"*Bet Amount:* ₱{bet_amount:,.2f}")
-                    st.markdown("</div>", unsafe_allow_html=True)
                 
                 with col2:
                     if game_type == "Tweaked Game":
@@ -875,7 +856,6 @@ if run_simulation:
                         st.markdown(f"*Calculated House Edge:* {house_edge:.2f}%")
                         st.markdown(f"*Player EV:* ₱{tweaked_ev:.3f} per game")
                         st.markdown(f"*Fair EV:* ₱{fair_ev:.3f} per game")
-                        st.markdown("</div>", unsafe_allow_html=True)
         
         with tab4:
             # Statistical summary with enhanced metrics
@@ -908,7 +888,6 @@ if run_simulation:
                     stats_df.style.format({'Value': '{:,.2f}'}),
                     use_container_width=True
                 )
-                st.markdown("</div>", unsafe_allow_html=True)
             
             with col2:
                 st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
@@ -949,7 +928,6 @@ if run_simulation:
                 metrics_df['Value'] = metrics_df['Value'].apply(format_metric)
                 st.dataframe(metrics_df, use_container_width=True)
                 st.caption("*Approximate calculations for educational purposes")
-                st.markdown("</div>", unsafe_allow_html=True)
             
             # Distribution plot
             st.markdown("##### Balance Distribution")
@@ -1007,7 +985,6 @@ if run_simulation:
             mime="text/csv",
             help="Download complete simulation data for further analysis"
         )
-        st.markdown("</div>", unsafe_allow_html=True)
     
     # Simulation insights with enhanced presentation
     st.markdown("<h2 class='section-header'>🧠 SIMULATION INSIGHTS & KEY TAKEAWAYS</h2>", unsafe_allow_html=True)
@@ -1030,7 +1007,6 @@ if run_simulation:
         *Monte Carlo Method*:
         Random sampling approximates complex probabilistic systems.
         """)
-        st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
         st.markdown("<div class='warning-card'>", unsafe_allow_html=True)
@@ -1048,13 +1024,10 @@ if run_simulation:
         *Player Psychology*:
         Short-term wins can mask long-term disadvantage.
         """)
-        st.markdown("</div>", unsafe_allow_html=True)
 
 else:
     # Default view - Landing page with enhanced design
-    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='color: #2E4053; margin-bottom: 2rem;'>🎯 PROJECT OVERVIEW & INTRODUCTION</h2>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #2E4053; margin-bottom: 2rem; text-align: center;'>🎯 PROJECT OVERVIEW & INTRODUCTION</h2>", unsafe_allow_html=True)
     
     # Introduction cards
     col1, col2, col3 = st.columns(3)
@@ -1069,7 +1042,6 @@ else:
         - Random selection mechanism
         - Simple yet profound probability model
         """)
-        st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
         st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
@@ -1081,7 +1053,6 @@ else:
         - Probability modeling
         - Stochastic process visualization
         """)
-        st.markdown("</div>", unsafe_allow_html=True)
     
     with col3:
         st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
@@ -1093,7 +1064,6 @@ else:
         - Visualize probability
         - Learn statistical modeling
         """)
-        st.markdown("</div>", unsafe_allow_html=True)
     
     # How to use section
     st.markdown("<h3 class='section-header'>🚀 GETTING STARTED</h3>", unsafe_allow_html=True)
@@ -1170,7 +1140,7 @@ else:
     # Learning outcomes
     st.markdown("<h3 class='section-header'>🎓 LEARNING OUTCOMES</h3>", unsafe_allow_html=True)
     
-    outcomes = """
+    st.markdown("""
     #### 📊 What You'll Learn:
     
     1. *Probability Theory*: Understanding of independent events and expected value
@@ -1195,9 +1165,7 @@ else:
     - Insurance probability calculations
     - Game theory applications
     - Statistical quality control
-    """
-    
-    st.markdown(outcomes)
+    """)
 
 # Enhanced Footer
 st.markdown("""
